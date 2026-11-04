@@ -37,6 +37,8 @@ import cl.duoc.induztek.ui.*
 import cl.duoc.induztek.ui.theme.Ambar
 import cl.duoc.induztek.ui.theme.AmbarBorde
 import cl.duoc.induztek.ui.theme.Verde
+import cl.duoc.induztek.util.TipoVibracion
+import cl.duoc.induztek.util.vibrar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -63,6 +65,12 @@ fun NuevaPruebaScreen(
             PackageManager.PERMISSION_GRANTED
         if (tienePermiso) onAbrirCamara() else pedirPermiso.launch(Manifest.permission.CAMERA)
     }
+
+    // Vibra al guardar la prueba o cuando algún campo tiene error
+    val hayErrores = form.errorAtTierra != null || form.errorBtTierra != null ||
+        form.errorAtBt != null || form.errorResultado != null
+    LaunchedEffect(hayErrores) { if (hayErrores) vibrar(context, TipoVibracion.ERROR) }
+    LaunchedEffect(form.estado) { if (form.estado == EstadoGuardado.GUARDADO) vibrar(context, TipoVibracion.EXITO) }
 
     if (form.error != null) {
         AlertDialog(
@@ -136,7 +144,8 @@ fun NuevaPruebaScreen(
                 valor = form.resultado,
                 opciones = RESULTADOS,
                 onSeleccion = vm::onResultadoChange,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                error = form.errorResultado
             )
 
             Text(
@@ -236,7 +245,7 @@ private fun CampoMedicion(
         ),
         supportingText = {
             when {
-                error != null -> Text(error)
+                error != null -> MensajeError(error)
                 anterior != null -> Row(verticalAlignment = Alignment.CenterVertically) {
                     // El ícono de alerta aparece con animación
                     AnimatedVisibility(visible = alerta) {

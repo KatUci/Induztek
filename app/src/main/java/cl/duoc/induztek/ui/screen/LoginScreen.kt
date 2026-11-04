@@ -8,16 +8,22 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bolt
+import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.outlined.Email
+import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cl.duoc.induztek.ui.LoginViewModel
+import cl.duoc.induztek.util.TipoVibracion
+import cl.duoc.induztek.util.vibrar
 
 @Composable
 fun LoginScreen(
@@ -25,6 +31,11 @@ fun LoginScreen(
     onIngresado: () -> Unit
 ) {
     val form by vm.form.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+
+    // Vibra cuando hay un error en el correo, la contraseña o las credenciales
+    val hayErrores = form.errorCorreo != null || form.errorClave != null || form.error != null
+    LaunchedEffect(hayErrores) { if (hayErrores) vibrar(context, TipoVibracion.ERROR) }
 
     Scaffold { padding ->
         Column(
@@ -59,32 +70,39 @@ fun LoginScreen(
             )
             Spacer(Modifier.height(32.dp))
 
-            OutlinedTextField(
-                value = form.correo,
-                onValueChange = vm::onCorreoChange,
-                label = { Text("Correo") },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                modifier = Modifier.fillMaxWidth()
+            CampoTexto(
+                etiqueta = "Correo",
+                valor = form.correo,
+                onCambio = vm::onCorreoChange,
+                error = form.errorCorreo,
+                icono = Icons.Outlined.Email,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
             )
-            Spacer(Modifier.height(8.dp))
-            OutlinedTextField(
-                value = form.clave,
-                onValueChange = vm::onClaveChange,
-                label = { Text("Contraseña") },
-                singleLine = true,
+            Spacer(Modifier.height(4.dp))
+            CampoTexto(
+                etiqueta = "Contraseña",
+                valor = form.clave,
+                onCambio = vm::onClaveChange,
+                error = form.errorClave,
+                icono = Icons.Outlined.Lock,
                 visualTransformation = PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                modifier = Modifier.fillMaxWidth()
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
             )
 
-            // El mensaje de error aparece con animación
+            // El mensaje de credenciales incorrectas aparece con animación
             AnimatedVisibility(visible = form.error != null) {
-                Text(
-                    form.error ?: "",
-                    color = MaterialTheme.colorScheme.error,
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
-                )
+                ) {
+                    Icon(
+                        Icons.Filled.Error,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.size(18.dp).padding(end = 4.dp)
+                    )
+                    Text(form.error ?: "", color = MaterialTheme.colorScheme.error)
+                }
             }
 
             Spacer(Modifier.height(16.dp))
