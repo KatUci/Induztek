@@ -6,8 +6,10 @@ Proyecto de la asignatura **DSY1105 – Desarrollo de Aplicaciones Móviles** (E
 
 ## Integrantes
 
-- Uciell Madrid
-- Katalina Mora
+**Grupo 10 - A**
+
+- Uciell Charlot Madrid Bermúdez
+- Katalina Alejandra Mora Quiñones
 
 ## Funcionalidades implementadas
 
