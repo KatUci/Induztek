@@ -50,15 +50,22 @@ class EquipoViewModel(private val repo: EquipoRepository): ViewModel() {
         }
     }
 
-    fun onCodigoChange(v: String) { _form.update { it.copy(codigo = v) } }
-    fun onTipoChange(v: String) { _form.update { it.copy(tipo = v) } }
-    fun onClienteChange(v: String) { _form.update { it.copy(cliente = v) } }
-    fun onInstalacionChange(v: String) { _form.update { it.copy(instalacion = v) } }
+    fun onCodigoChange(v: String) { _form.update { it.copy(codigo = v, errorCodigo = null) } }
+    fun onTipoChange(v: String) { _form.update { it.copy(tipo = v, errorTipo = null) } }
+    fun onClienteChange(v: String) { _form.update { it.copy(cliente = v, errorCliente = null) } }
+    fun onInstalacionChange(v: String) { _form.update { it.copy(instalacion = v, errorInstalacion = null) } }
     fun onMarcaModeloChange(v: String) { _form.update { it.copy(marcaModelo = v) } }
     fun onNumeroSerieChange(v: String) { _form.update { it.copy(numeroSerie = v) } }
     fun limpiarError() { _form.update { it.copy(error = null) } }
 
     fun guardar(oAlFinal: () -> Unit = {}) = viewModelScope.launch {
+        // Validación de los campos obligatorios antes de guardar
+        val validado = validar(_form.value)
+        if (validado.tieneErrores) {
+            _form.value = validado
+            return@launch
+        }
+
         try {
             val f = _form.value
             if (f.id == null) {
@@ -78,4 +85,15 @@ class EquipoViewModel(private val repo: EquipoRepository): ViewModel() {
         repo.eliminar(equipo)
         if (_seleccionado.value?.id == equipo.id) _seleccionado.value = null
     }
+
+    private fun validar(f: EquipoFormState): EquipoFormState = f.copy(
+        errorCodigo = when {
+            f.codigo.isBlank() -> "Ingresa el código del equipo"
+            f.codigo.trim().length < 3 -> "Mínimo 3 caracteres"
+            else -> null
+        },
+        errorTipo = if (f.tipo.isBlank()) "Selecciona el tipo de equipo" else null,
+        errorCliente = if (f.cliente.isBlank()) "Ingresa el cliente" else null,
+        errorInstalacion = if (f.instalacion.isBlank()) "Ingresa la instalación o ubicación" else null
+    )
 }

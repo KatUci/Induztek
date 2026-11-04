@@ -1,8 +1,15 @@
 package cl.duoc.induztek.ui.screen
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -14,7 +21,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import cl.duoc.induztek.ui.theme.*
@@ -28,7 +37,8 @@ fun CampoSeleccion(
     valor: String,
     opciones: List<String>,
     onSeleccion: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    error: String? = null
 ) {
     var abierto by remember { mutableStateOf(false) }
 
@@ -42,6 +52,8 @@ fun CampoSeleccion(
             onValueChange = {},
             readOnly = true,
             label = { Text(etiqueta) },
+            isError = error != null,
+            supportingText = error?.let { { MensajeError(it) } },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = abierto) },
             modifier = Modifier
                 .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
@@ -57,6 +69,55 @@ fun CampoSeleccion(
                     }
                 )
             }
+        }
+    }
+}
+
+// Campo de texto con validación: borde rojo, ícono y mensaje de error bajo el campo
+@Composable
+fun CampoTexto(
+    etiqueta: String,
+    valor: String,
+    onCambio: (String) -> Unit,
+    error: String?,
+    icono: ImageVector,
+    modifier: Modifier = Modifier,
+    placeholder: String? = null,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    visualTransformation: VisualTransformation = VisualTransformation.None
+) {
+    OutlinedTextField(
+        value = valor,
+        onValueChange = onCambio,
+        label = { Text(etiqueta) },
+        placeholder = placeholder?.let { { Text(it) } },
+        singleLine = true,
+        isError = error != null,
+        leadingIcon = { Icon(icono, contentDescription = null) },
+        trailingIcon = {
+            if (error != null) Icon(Icons.Filled.Error, contentDescription = "Campo con error")
+        },
+        supportingText = error?.let { { MensajeError(it) } },
+        keyboardOptions = keyboardOptions,
+        visualTransformation = visualTransformation,
+        modifier = modifier.fillMaxWidth()
+    )
+}
+
+// Mensaje de error bajo un campo, aparece con animación
+@Composable
+fun MensajeError(texto: String) {
+    var visible by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { visible = true }
+    AnimatedVisibility(visible = visible, enter = fadeIn() + expandVertically()) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                Icons.Filled.Warning,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.error,
+                modifier = Modifier.size(14.dp).padding(end = 2.dp)
+            )
+            Text(texto, color = MaterialTheme.colorScheme.error)
         }
     }
 }

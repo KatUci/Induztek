@@ -13,6 +13,7 @@ data class PruebaFormState(
     val errorAtTierra: String? = null,
     val errorBtTierra: String? = null,
     val errorAtBt: String? = null,
+    val errorResultado: String? = null,
     val estado: EstadoGuardado = EstadoGuardado.LISTO,
     val error: String? = null
 )

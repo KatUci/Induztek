@@ -7,6 +7,8 @@ import kotlinx.coroutines.flow.*
 // En la próxima evaluación el login se validará contra la API (Spring Boot).
 private data class Usuario(val nombre: String, val clave: String)
 
+private val CORREO_VALIDO = Regex("^[\\w.+-]+@[\\w-]+(\\.[\\w-]+)+$")
+
 class LoginViewModel : ViewModel() {
 
     private val usuarios = mapOf(
@@ -21,19 +23,25 @@ class LoginViewModel : ViewModel() {
     private val _form = MutableStateFlow(LoginFormState())
     val form: StateFlow<LoginFormState> = _form.asStateFlow()
 
-    fun onCorreoChange(v: String) { _form.update { it.copy(correo = v, error = null) } }
-    fun onClaveChange(v: String) { _form.update { it.copy(clave = v, error = null) } }
+    fun onCorreoChange(v: String) { _form.update { it.copy(correo = v, errorCorreo = null, error = null) } }
+    fun onClaveChange(v: String) { _form.update { it.copy(clave = v, errorClave = null, error = null) } }
 
     fun ingresar(oAlFinal: () -> Unit = {}) {
         val f = _form.value
-        val error = when {
+
+        // Validación de cada campo por separado
+        val errorCorreo = when {
             f.correo.isBlank() -> "Ingresa tu correo"
-            !f.correo.contains("@") -> "El correo no es válido"
-            f.clave.isBlank() -> "Ingresa tu contraseña"
+            !CORREO_VALIDO.matches(f.correo.trim()) -> "El correo no es válido"
             else -> null
         }
-        if (error != null) {
-            _form.update { it.copy(error = error) }
+        val errorClave = when {
+            f.clave.isBlank() -> "Ingresa tu contraseña"
+            f.clave.length < 4 -> "Mínimo 4 caracteres"
+            else -> null
+        }
+        if (errorCorreo != null || errorClave != null) {
+            _form.update { it.copy(errorCorreo = errorCorreo, errorClave = errorClave) }
             return
         }
 

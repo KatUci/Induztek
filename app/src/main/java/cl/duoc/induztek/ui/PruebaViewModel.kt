@@ -61,7 +61,7 @@ class PruebaViewModel(private val repo: PruebaRepository): ViewModel() {
     fun onAtTierraChange(v: String) { _form.update { it.copy(atTierra = v, errorAtTierra = null) } }
     fun onBtTierraChange(v: String) { _form.update { it.copy(btTierra = v, errorBtTierra = null) } }
     fun onAtBtChange(v: String) { _form.update { it.copy(atBt = v, errorAtBt = null) } }
-    fun onResultadoChange(v: String) { _form.update { it.copy(resultado = v) } }
+    fun onResultadoChange(v: String) { _form.update { it.copy(resultado = v, errorResultado = null) } }
     fun onObservacionesChange(v: String) { _form.update { it.copy(observaciones = v) } }
     fun onFotoTomada(path: String) { _form.update { it.copy(fotoPath = path) } }
     fun quitarFoto() { _form.update { it.copy(fotoPath = null) } }
@@ -76,12 +76,15 @@ class PruebaViewModel(private val repo: PruebaRepository): ViewModel() {
     fun guardar(tecnico: String, oAlFinal: (Long) -> Unit = {}) = viewModelScope.launch {
         val f = _form.value
 
-        // Validación de los 3 campos de medición
+        // Validación de los 3 campos de medición y del resultado
         val errorAt = errorMedicion(f.atTierra)
         val errorBt = errorMedicion(f.btTierra)
         val errorAb = errorMedicion(f.atBt)
-        if (errorAt != null || errorBt != null || errorAb != null) {
-            _form.update { it.copy(errorAtTierra = errorAt, errorBtTierra = errorBt, errorAtBt = errorAb) }
+        val errorRes = if (f.resultado.isBlank()) "Selecciona el resultado" else null
+        if (errorAt != null || errorBt != null || errorAb != null || errorRes != null) {
+            _form.update {
+                it.copy(errorAtTierra = errorAt, errorBtTierra = errorBt, errorAtBt = errorAb, errorResultado = errorRes)
+            }
             return@launch
         }
 
